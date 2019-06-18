@@ -2,21 +2,21 @@
     session_start();
 	include("baglan.php");
     if (isset($_POST["add"])){
-        if (isset($_SESSION["sepet"])){
-            $item_array_id = array_column($_SESSION["sepet"],"id");
-            if (!isset($_GET["urun_id"],$item_array_id)){
-                $count = count($_SESSION["sepet"]);
+        if (isset($_SESSION["cart"])){
+            $item_array_id = array_column($_SESSION["cart"],"id");
+            if (!isset($_GET["id"],$item_array_id)){
+                $count = count($_SESSION["cart"]);
                 $item_array = array(
                     'id' => $_GET["id"],
                     'urunAdi' => $_POST["urunAdi"],
                     'urunFiyat' => $_POST["urunFiyat"],
                     'item_quantity' => $_POST["quantity"],
                 );
-                $_SESSION["sepet"][$count] = $item_array;
-                echo '<script>window.location="sepet.php"</script>';
+                $_SESSION["cart"][$count] = $item_array;
+                echo '<script>window.location="cart.php"</script>';
             }else{
-                echo '<script>alert("Product is already Added to sepet")</script>';
-                echo '<script>window.location="sepet.php"</script>';
+                echo '<script>alert("Product is already Added to Cart")</script>';
+                echo '<script>window.location="cart.php"</script>';
             }
         }else{
             $item_array = array(
@@ -25,16 +25,16 @@
                 'urunFiyat' => $_POST["urunFiyat"],
                 'item_quantity' => $_POST["quantity"],
             );
-            $_SESSION["sepet"][0] = $item_array;
+            $_SESSION["cart"][0] = $item_array;
         }
     }
     if (isset($_GET["action"])){
         if ($_GET["action"] == "delete"){
-            foreach ($_SESSION["sepet"] as $keys => $value){
+            foreach ($_SESSION["cart"] as $keys => $value){
                 if ($value["id"] == $_GET["id"]){
-                    unset($_SESSION["sepet"][$keys]);
+                    unset($_SESSION["cart"][$keys]);
                     echo '<script>alert("Ürün sepetinizden çıkartılmıştır...!")</script>';
-                    echo '<script>window.location="sepet.php"</script>';
+                    echo '<script>window.location="cart.php"</script>';
                 }
             }
         }
@@ -97,8 +97,8 @@
                             <div class="mobile-menu d-block d-lg-none">
                                 <nav>
                                     <ul>
-										<li><a href="index2.html">Anasayfa</a></li>
-										<li><a href="sepet.php">Alisveris</a></li>
+										<li><a href="index-3.php">Anasayfa</a></li>
+										<li><a href="cart.php">Alisveris</a></li>
                                         <li><a href="contact.html">Bize Ulaşın</a></li>
                                     </ul>
                                 </nav>
@@ -112,27 +112,33 @@
 
     <div class="container" style="width: 65%">
         <h2>Alisveris Sepeti</h2>
+		                            <div class="mobile-menu d-block d-lg-none">
+                                <nav>
+                                    <ul>
+										<li><a href="cart.php">Tüm Ürünler</a></li>
+										
+									
+                                    </ul>
+                                </nav>
+                            </div>
+		
         <?php
-            $query = "select * from urunler order by id asc";
+            $query = "select * from urunler where kategori_adi = 'gida' order by urun_id asc";
             $result = mysqli_query($baglanti,$query);
             if(mysqli_num_rows($result) > 0) {
                 while ($row = mysqli_fetch_array($result)) {
                     ?>
                     <div class="col-md-3">
 
-                        <form method="post" action="sepet.php?action=add&id=<?php echo $row["id"]; ?>">
+                        <form method="post" action="cart.php?action=add&id=<?php echo $row["urun_id"]; ?>">
 
                             <div class="product">
 
                                 <h5 class="text-info"><?php echo $row["urunAdi"]; ?></h5>
-                                <h5 class="text-danger"><?php echo $row["ureticiAdi"]; ?></h5>
-								<h5 class="text-danger"><?php echo $row["stokSayisi"]; ?></h5>
-								<input type="hidden" name="urunAdi" value="<?php echo $row["urunFiyat"]; ?>">
-								<input type="hidden" name="urunFiyat" value="<?php echo $row["kategori_adi"]; ?>">
+                                <h5 class="text-danger"><?php echo $row["urunFiyat"]; ?></h5>
                                 <input type="text" name="quantity" class="form-control" value="1">
-								 
-                                
-                                
+                                <input type="hidden" name="urunAdi" value="<?php echo $row["urunAdi"]; ?>">
+                                <input type="hidden" name="urunFiyat" value="<?php echo $row["urunFiyat"]; ?>">
                                 <input type="submit" name="add" style="margin-top: 5px;" class="btn btn-success"
                                        value="Sepete Ekle">
                             </div>
@@ -156,17 +162,17 @@
             </tr>
 
             <?php
-                if(!empty($_SESSION["sepet"])){
+                if(!empty($_SESSION["cart"])){
                     $total = 0;
-                    foreach ($_SESSION["sepet"] as $key => $value) {
-                        ?>
+                    foreach ($_SESSION["cart"] as $key => $value) {
+                        ?>							
                         <tr>
                             <td><?php echo $value["urunAdi"]; ?></td>
                             <td><?php echo $value["item_quantity"]; ?></td>
                             <td> <?php echo $value["urunFiyat"]; ?></td>
                             <td>
                                  <?php echo number_format($value["item_quantity"] * $value["urunFiyat"], 2); ?></td>
-                            <td><a href="sepet.php?action=delete&id=<?php echo $value["id"]; ?>"><span
+                            <td><a href="cart.php?action=delete&urun_id=<?php echo $value["urun_id"]; ?>"><span
                                         class="text-danger">Ürün çıkart</span></a></td>
 
                         </tr>
@@ -177,12 +183,21 @@
                         <tr>
                             <td colspan="3" align="right">Total</td>
                             <th align="right">? <?php echo number_format($total, 2); ?></th>
+							
+							
                             <td></td>
-                        </tr>
+							
+													
+						
+						
+                        </tr>				
                         <?php
                     }
                 ?>
             </table>
+						<form action="siparis.php" method="POST">
+			<input type="submit" name="gonder" value="Gonder" align="right">
+			</form>
         </div>
 
     </div>
